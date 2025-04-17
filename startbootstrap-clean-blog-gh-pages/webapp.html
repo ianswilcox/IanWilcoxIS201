@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 Questions Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #game-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #question-input {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #submit-question, #submit-guess {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #submit-question:hover, #submit-guess:hover {
+            background-color: #218838;
+        }
+        #guess-section {
+            margin-top: 20px;
+            display: none;
+        }
+        #history {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #restart {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #restart:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>20 Questions Game</h1>
+    <a href="scratch.html">Scratch</a>
+    <div id="game-container">
+        <div id="question-section">
+            <input type="text" id="question-input" placeholder="Ask a yes-or-no question...">
+            <button id="submit-question">Submit Question</button>
+        </div>
+        <div id="guess-section">
+            <input type="text" id="guess-input" placeholder="Enter your guess...">
+            <button id="submit-guess">Submit Guess</button>
+        </div>
+        <div id="status">Questions remaining: 20</div>
+        <div id="history"></div>
+        <button id="restart">Play Again</button>
+    </div>
+
+    <script>
+        // List of possible words
+        const words = [
+            { word: "apple", isLiving: true, isEdible: true, isManMade: false, isCommon: true },
+            { word: "car", isLiving: false, isEdible: false, isManMade: true, isCommon: true },
+            { word: "dog", isLiving: true, isEdible: false, isManMade: false, isCommon: true },
+            { word: "tree", isLiving: true, isEdible: false, isManMade: false, isCommon: true },
+            { word: "book", isLiving: false, isEdible: false, isManMade: true, isCommon: true },
+            { word: "cloud", isLiving: false, isEdible: false, isManMade: false, isCommon: true },
+            { word: "chair", isLiving: false, isEdible: false, isManMade: true, isCommon: true },
+            { word: "bird", isLiving: true, isEdible: false, isManMade: false, isCommon: true },
+            { word: "phone", isLiving: false, isEdible: false, isManMade: true, isCommon: true },
+            { word: "river", isLiving: false, isEdible: false, isManMade: false, isCommon: true }
+        ];
+
+        // Game state
+        let selectedWord = null;
+        let questionsAsked = 0;
+        const maxQuestions = 20;
+        let gameOver = false;
+
+        // DOM elements
+        const questionInput = document.getElementById('question-input');
+        const submitQuestion = document.getElementById('submit-question');
+        const guessInput = document.getElementById('guess-input');
+        const submitGuess = document.getElementById('submit-guess');
+        const status = document.getElementById('status');
+        const history = document.getElementById('history');
+        const guessSection = document.getElementById('guess-section');
+        const restartButton = document.getElementById('restart');
+
+        // Start a new game
+        function startGame() {
+            selectedWord = words[Math.floor(Math.random() * words.length)];
+            questionsAsked = 0;
+            gameOver = false;
+            questionInput.value = '';
+            guessInput.value = '';
+            history.innerHTML = '';
+            status.textContent = `Questions remaining: ${maxQuestions}`;
+            guessSection.style.display = 'none';
+            restartButton.style.display = 'none';
+            questionInput.disabled = false;
+            submitQuestion.disabled = false;
+        }
+
+        // Process a question
+        function processQuestion() {
+            if (gameOver) return;
+
+            const question = questionInput.value.trim();
+            if (!question) {
+                alert('Please enter a question.');
+                return;
+            }
+
+            questionsAsked++;
+            const remaining = maxQuestions - questionsAsked;
+
+            // Simple question analysis (extendable for more complex logic)
+            let answer = 'No';
+            const lowerQuestion = question.toLowerCase();
+
+            if (lowerQuestion.includes('living') && selectedWord.isLiving) {
+                answer = 'Yes';
+            } else if (lowerQuestion.includes('edible') && selectedWord.isEdible) {
+                answer = 'Yes';
+            } else if (lowerQuestion.includes('man-made') && selectedWord.isManMade) {
+                answer = 'Yes';
+            } else if (lowerQuestion.includes('common') && selectedWord.isCommon) {
+                answer = 'Yes';
+            }
+
+            // Update history
+            const historyItem = document.createElement('div');
+            historyItem.textContent = `Q${questionsAsked}: ${question} - ${answer}`;
+            history.appendChild(historyItem);
+            history.scrollTop = history.scrollHeight;
+
+            // Update status
+            status.textContent = `Questions remaining: ${remaining}`;
+
+            // Clear input
+            questionInput.value = '';
+
+            // Check if max questions reached
+            if (questionsAsked >= maxQuestions) {
+                endGame();
+            }
+        }
+
+        // Process a guess
+        function processGuess() {
+            const guess = guessInput.value.trim().toLowerCase();
+            if (!guess) {
+                alert('Please enter a guess.');
+                return;
+            }
+
+            gameOver = true;
+            questionInput.disabled = true;
+            submitQuestion.disabled = true;
+
+            if (guess === selectedWord.word) {
+                status.textContent = `Congratulations! You guessed the word "${selectedWord.word}" correctly!`;
+            } else {
+                status.textContent = `Game Over! The word was "${selectedWord.word}". Your guess was "${guess}".`;
+            }
+
+            restartButton.style.display = 'block';
+        }
+
+        // End the game
+        function endGame() {
+            gameOver = true;
+            questionInput.disabled = true;
+            submitQuestion.disabled = true;
+            guessSection.style.display = 'block';
+            status.textContent = 'You’ve used all 20 questions! Make your final guess.';
+        }
+
+        // Event listeners
+        submitQuestion.addEventListener('click', processQuestion);
+        submitGuess.addEventListener('click', processGuess);
+        restartButton.addEventListener('click', startGame);
+
+        // Allow Enter key to submit question
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') processQuestion();
+        });
+
+        // Allow Enter key to submit guess
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') processGuess();
+        });
+
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>
